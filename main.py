@@ -5,30 +5,35 @@ import os
 import webbrowser
 import sys
 
-
 window = Tk()
 window.title("Image Watermarking Desktop App")
 # window.iconbitmap('static/images/icon.png')
-window.geometry("650x550")
+window.geometry("650x440")
 
 frame = Frame(window)
 frame.pack(fill=BOTH, expand=1)
 
 # Define background image
-bg = ImageTk.PhotoImage(Image.open('static/images/bg.png'))
+bg = ImageTk.PhotoImage(file='static/images/bg2.png')
 bg_label = Label(frame, image=bg)
 bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+canvas = Canvas(frame, width=650, height=440)
+canvas.pack(fill=BOTH, expand=True)
+# Set img in canvas
+canvas.create_image(0, 0, image=bg, anchor='nw')
 
 BASIC_IMG_DIR = 'static/images/'
 WTM_IMG_DIR = 'static/wtm_images/'
 
 
-def restart():
-    """Restarts the current program.
-    Note: this function does not return. Any cleanup action (like
-    saving data) must be done before calling this function."""
-    python = sys.executable
-    os.execl(python, python, * sys.argv)
+def resizer(e):
+    global bg1, resized_bg, new_bg
+    bg1 = Image.open('static/images/bg2.png')
+    resized_bg = bg1.resize((e.width, e.height), Image.ANTIALIAS)
+    # Define img again
+    new_bg = ImageTk.PhotoImage(resized_bg)
+    # Add it back to the canvas
+    canvas.create_image(0, 0, image=new_bg, anchor='nw')
 
 
 # Create New Frame with full screen ScrollBar
@@ -92,6 +97,14 @@ def clear_frame():
 def clear_second_frame():
     for widget in second_frame.winfo_children():
         widget.destroy()
+
+
+def restart():
+    """Restarts the current program.
+    Note: this function does not return. Any cleanup action (like
+    saving data) must be done before calling this function."""
+    python = sys.executable
+    os.execl(python, python, * sys.argv)
 
 
 # 'ADD IMAGES' SUBMENU
@@ -299,21 +312,25 @@ watermark_menu.add_command(label="Add Logo Watermark", command=add_logo_wtm)
 # 'Restart' Menu
 main_menu.add_command(label="   Restart   ", command=restart)
 
-# MAIN WINDOW LABELS
-img_label = Label(frame, text="Select and Open image(s)", font=("Arial", 17), fg='#b00f38', bg='#f6f6f6')
-img_label.pack(pady=(150, 20))
-note_label = Label(frame, text='✔ Opened image(s) will be saved in the "images" folder\n\n', font=("Arial", 12),
-                   fg='#b00f38', bg='#f6f6f6')
-note_label.pack()
+# Frame Label-1
+img_label = Label(canvas, text="Select and Open image(s)", font=("Arial", 17), fg='#b00f38', bg='#f6f6f6')
+img_label.pack(pady=50)
 
 # 'Select Images' BUTTON
-frame_btn = Menubutton(frame, text="Select Images", relief=RAISED, width=20, font=("Arial", 12), bg="#fde701", fg='#221e1f')
+frame_btn = Menubutton(canvas, text="Select Images", relief=RAISED, width=20, font=("Arial", 12), bg="#fde701",
+                       fg='#221e1f')
 menu_1 = Menu(frame_btn, tearoff=0, activebackground='#f9330d')
 frame_btn['menu'] = menu_1
 menu_1.add_checkbutton(label="From My Computer", variable=StringVar, command=open_from_computer)
 menu_1.add_checkbutton(label="From Google Drive", variable=IntVar(), command=from_google_drive)
 menu_1.add_checkbutton(label="From Google Photos", variable=IntVar(), command=from_google_photos)
-frame_btn.pack()
+frame_btn.pack(pady=(0, 50))
 
+# Frame Label-2
+note_label = Label(canvas, text='✔ Opened image(s) will be saved in the "images" folder ✔', font=("Arial", 12),
+                   fg='#b00f38', bg='#f6f6f6')
+note_label.pack()
+
+window.bind('<Configure>', resizer)
 window.mainloop()
 
